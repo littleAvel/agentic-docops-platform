@@ -1,0 +1,40 @@
+# Environment
+.env
+.env.example
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Alembic runtime
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Build artifacts
+dist/
+build/

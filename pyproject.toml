@@ -1,0 +1,34 @@
+[project]
+name = "docops"
+version = "0.1.0"
+description = "Agentic workflow platform for document operations (routing, bounded execution, tools, verification)"
+authors = [
+    {name = "Malika Umurzakova"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi (>=0.128.0,<0.129.0)",
+    "uvicorn[standard] (>=0.40.0,<0.41.0)",
+    "pydantic-settings (>=2.12.0,<3.0.0)",
+    "structlog (>=25.5.0,<26.0.0)",
+    "sqlalchemy (>=2.0.45,<3.0.0)",
+    "aiosqlite (>=0.22.1,<0.23.0)",
+    "alembic (>=1.17.2,<2.0.0)",
+    "greenlet (>=3.3.0,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-asyncio (>=1.3.0,<2.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "ruff (>=0.14.10,<0.15.0)",
+    "mypy (>=1.19.1,<2.0.0)"
+]
