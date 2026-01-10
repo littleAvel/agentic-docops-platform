@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import String, DateTime, Enum, Text, Integer, JSON
 from sqlalchemy.orm import Mapped, mapped_column
@@ -37,8 +37,11 @@ class Job(Base):
 
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+    source_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    signals: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
 
 class AuditEventType(str, enum.Enum):
@@ -62,4 +65,16 @@ class AuditEvent(Base):
     # JSON payload: safe to store structured details (tool inputs, verdicts, error codes)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class Artifact(Base):
+    __tablename__ = "artifacts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    job_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+
+    name: Mapped[str] = mapped_column(String(128), nullable=False)  # e.g. extracted_json, verification_report
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)

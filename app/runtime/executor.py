@@ -1,11 +1,13 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import write_audit_event
 from app.db.models import AuditEventType
+from app.runtime.policy import ToolPolicy
+
 
 @dataclass
 class ExecLimits:
@@ -41,7 +43,19 @@ class BoundedExecutor:
         inputs: Dict[str, Any],
         ctx: Dict[str, Any],
         state: ExecState,
+        policy: ToolPolicy,
     ) -> Dict[str, Any]:
+        # 0) POLICY CHECK (deny-by-default) — before any logging or budget charging
+        if not policy.is_allowed(tool_name):
+            await write_audit_event(
+                session,
+                job_id=job_id,
+                event_type=AuditEventType.POLICY_DENIED,
+                payload={"tool": tool_name, "reason": "deny_by_default"},
+            )
+            raise PermissionError(f"tool not allowed by policy: {tool_name}")
+
+        # 1) BUDGET / LIMITS
         if state.steps >= self.limits.max_steps:
             raise StepLimitExceeded("max_steps exceeded")
         if state.tool_calls >= self.limits.max_tool_calls:
@@ -51,15 +65,21 @@ class BoundedExecutor:
         state.tool_calls += 1
         self._charge(state, cost=1)
 
+        # 2) REDACT INPUTS FOR AUDIT
+        allow_keys = policy.allowed_audit_keys(tool_name)
+        safe_inputs = {k: inputs.get(k) for k in allow_keys if k in inputs}
+
         await write_audit_event(
             session,
             job_id=job_id,
             event_type=AuditEventType.TOOL_CALLED,
-            payload={"tool": tool_name, "inputs": inputs},
+            payload={"tool": tool_name, "inputs": safe_inputs},
         )
 
+        # 3) EXECUTE TOOL
         result = await tool_fn(inputs=inputs, ctx=ctx)
 
+        # 4) AUDIT RESULT (no sensitive content, only keys)
         await write_audit_event(
             session,
             job_id=job_id,

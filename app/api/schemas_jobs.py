@@ -5,6 +5,7 @@ from app.db.models import JobStatus
 class JobCreateRequest(BaseModel):
     filename: str
     content_type: str
+    text: str | None = None
 
 
 class JobResponse(BaseModel):
@@ -16,6 +17,7 @@ class JobResponse(BaseModel):
     pipeline_id: str | None = None
     schema_id: str | None = None
     error: str | None = None
+    signals: dict = {}
 
 
 class JobStatusUpdateRequest(BaseModel):

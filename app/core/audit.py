@@ -11,6 +11,8 @@ async def write_audit_event(
     job_id: str,
     event_type: AuditEventType,
     payload: Dict[str, Any],
+    commit: bool = True
 ) -> None:
     session.add(AuditEvent(job_id=job_id, event_type=event_type, payload=payload))
-    await session.commit()
+    if commit:
+        await session.commit()
