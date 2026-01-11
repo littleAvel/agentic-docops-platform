@@ -9,16 +9,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.schemas_events import AuditEventResponse
 from app.api.schemas_jobs import JobCreateRequest, JobResponse, JobStatusUpdateRequest
 from app.core.audit import write_audit_event
-from app.db.models import AuditEvent, AuditEventType, Job, JobStatus
+from app.db.models import Artifact, AuditEvent, AuditEventType, Job, JobStatus  # <-- Artifact added
 from app.db.session import get_session
 from app.domain.job_service import set_job_status
 from app.runtime.runner import run_job
 from app.tools.init_tools import build_tool_registry
 
+
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 # Build registry once (module-level). Tools should be pure / stateless.
 tool_registry = build_tool_registry()
+
+
+async def _ensure_job_exists(session: AsyncSession, job_id: str) -> None:
+    res = await session.execute(select(Job.id).where(Job.id == job_id))
+    exists = res.scalar_one_or_none()
+    if not exists:
+        raise HTTPException(status_code=404, detail="job not found")
 
 
 @router.post("", response_model=JobResponse, status_code=201)
@@ -61,11 +69,35 @@ async def get_job(job_id: str, session: AsyncSession = Depends(get_session)):
 
 @router.get("/{job_id}/events", response_model=list[AuditEventResponse])
 async def get_job_events(job_id: str, session: AsyncSession = Depends(get_session)):
+    await _ensure_job_exists(session, job_id)
+
     res = await session.execute(
         select(AuditEvent).where(AuditEvent.job_id == job_id).order_by(AuditEvent.id.asc())
     )
     events = res.scalars().all()
     return [AuditEventResponse.model_validate(e, from_attributes=True) for e in events]
+
+
+@router.get("/{job_id}/artifacts")
+async def get_job_artifacts(job_id: str, session: AsyncSession = Depends(get_session)):
+    """
+    Read-only inspection endpoint: lists persisted artifacts for a job.
+    """
+    await _ensure_job_exists(session, job_id)
+
+    res = await session.execute(
+        select(Artifact).where(Artifact.job_id == job_id).order_by(Artifact.id.asc())
+    )
+    artifacts = res.scalars().all()
+
+    return [
+        {
+            "name": a.name,
+            "payload": a.payload,
+            "created_at": a.created_at,
+        }
+        for a in artifacts
+    ]
 
 
 @router.post("/{job_id}/status", response_model=JobResponse)

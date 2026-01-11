@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div style="font-weight:700; margin-bottom: 10px;">Create Job</div>
+
+            <form method="post" action="/ui/jobs">
+                <div style="margin-bottom:10px;">
+                    <div class="muted">Filename</div>
+                    <input type="text" name="filename" value="ui_job.txt" />
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <div class="muted">Content Type</div>
+                    <input type="text" name="content_type" value="text/plain" />
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <div class="muted">Text</div>
+                    <textarea name="text" required>Invoice #123. Total 50 USD. Vendor: ACME.</textarea>
+                </div>
+
+                <button class="btn btn-primary" type="submit">Create</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card table-scroll">
+            <div style="font-weight:700; margin-bottom: 10px;">Jobs</div>
+
+            {% if jobs|length == 0 %}
+            <div class="muted mono">No jobs yet.</div>
+            {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Filename</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for j in jobs %}
+                    <tr>
+                        <td class="mono">{{ j.id }}</td>
+                        <td><span class="badge">{{ (j.status|string).replace("JobStatus.","") }}</span></td>
+                        <td>{{ j.filename }}</td>
+                        <td class="muted">
+                            {% if j.created_at %}
+                            {{ j.created_at.strftime("%H:%M:%S") }}
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="btn" href="/ui/jobs/{{ j.id }}">Open</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

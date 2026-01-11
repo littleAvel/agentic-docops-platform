@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+    <div>
+        <div style="font-weight:900; font-size:18px;">
+            Job <span class="mono">{{ job.id[:8] }}…</span>
+        </div>
+        <div class="muted">
+            Filename: {{ job.filename or "—" }} · Content-Type: {{ job.content_type or "—" }}
+        </div>
+        <div class="muted">
+            Created:
+            {% if job.created_at %}{{ (job.created_at|string)[:19] }}{% else %}—{% endif %}
+        </div>
+    </div>
+
+    <div class="right">
+        <span class="badge">status: {{ job.status }}</span>
+
+        <form method="post" action="/ui/jobs/{{ job.id }}/run">
+            <button class="btn btn-primary" type="submit" {% if job.status in ["SUCCEEDED","FAILED","NEEDS_REVIEW"]
+                %}disabled{% endif %}>
+                Run
+            </button>
+        </form>
+
+        <a class="btn" href="/ui">Back</a>
+    </div>
+</div>
+
+<div class="row" style="margin-top:16px;">
+    <div class="col">
+        <div class="card">
+            <div style="font-weight:800; margin-bottom:8px;">Signals</div>
+
+            {% if job.signals and (job.signals|length > 0) %}
+            <pre style="max-height:280px;">{{ job.signals | tojson(indent=2) }}</pre>
+            {% else %}
+            <div class="muted">No signals yet.</div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div style="font-weight:800; margin-bottom:8px;">Source Text</div>
+            {% if job.source_text %}
+            <pre style="max-height:320px;">{{ job.source_text }}</pre>
+            {% else %}
+            <div class="muted">No source text.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
+                <div style="font-weight:800;">Audit Events</div>
+                <div class="muted">{{ events|length }} events</div>
+            </div>
+
+            {% if events|length == 0 %}
+            <div class="muted" style="margin-top:10px;">No events.</div>
+            {% else %}
+            <table style="margin-top:10px;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Payload</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in events %}
+                    <tr>
+                        <td class="mono">{{ e.id }}</td>
+                        <td class="muted">
+                            {% if e.created_at %}{{ (e.created_at|string)[:19] }}{% else %}—{% endif %}
+                        </td>
+                        <td><span class="badge">{{ e.event_type }}</span></td>
+                        <td>
+                            {% if e.payload %}
+                            <pre style="max-height:220px;">{{ e.payload | tojson(indent=2) }}</pre>
+                            {% else %}
+                            <span class="muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
