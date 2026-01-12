@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.schemas_artifacts import ArtifactResponse
 from app.api.schemas_events import AuditEventResponse
 from app.api.schemas_jobs import JobCreateRequest, JobResponse, JobStatusUpdateRequest
 from app.core.audit import write_audit_event
@@ -78,26 +79,13 @@ async def get_job_events(job_id: str, session: AsyncSession = Depends(get_sessio
     return [AuditEventResponse.model_validate(e, from_attributes=True) for e in events]
 
 
-@router.get("/{job_id}/artifacts")
+@router.get("/{job_id}/artifacts", response_model=list[ArtifactResponse])
 async def get_job_artifacts(job_id: str, session: AsyncSession = Depends(get_session)):
-    """
-    Read-only inspection endpoint: lists persisted artifacts for a job.
-    """
-    await _ensure_job_exists(session, job_id)
-
     res = await session.execute(
         select(Artifact).where(Artifact.job_id == job_id).order_by(Artifact.id.asc())
     )
     artifacts = res.scalars().all()
-
-    return [
-        {
-            "name": a.name,
-            "payload": a.payload,
-            "created_at": a.created_at,
-        }
-        for a in artifacts
-    ]
+    return [ArtifactResponse.model_validate(a, from_attributes=True) for a in artifacts]
 
 
 @router.post("/{job_id}/status", response_model=JobResponse)
