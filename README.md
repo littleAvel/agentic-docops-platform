@@ -18,7 +18,6 @@ This project demonstrates how to build reliable, inspectable LLM systems suitabl
 - Separating planning, execution, verification, and actions
 - Production-grade FastAPI architecture with async SQLAlchemy
 
----
 
 ## Core Concepts
 
@@ -34,7 +33,6 @@ An agent here is **a workflow executor** that:
 
 All steps are explicit, logged, and bounded.
 
----
 
 ## Features
 - Job-based execution model
@@ -49,7 +47,6 @@ All steps are explicit, logged, and bounded.
 - OpenAPI documentation
 - Health & readiness probes
 
----
 
 ## Job Lifecycle
 
@@ -73,7 +70,6 @@ Each job progresses through a strict finite state machine:
 ```
 Invalid transitions are explicitly blocked.
 
----
 
 ## Architecture
 High-level system flow
@@ -95,7 +91,6 @@ User / API / UI
       ↓
  Artifacts + Audit Log
 ```
----
 
 ## Core components
 
@@ -132,7 +127,6 @@ User / API / UI
         - exports
         - rafts
 
----
 
 ## API Overview
 
@@ -152,7 +146,6 @@ User / API / UI
 
 `GET /docs` — OpenAPI
 
----
 
 
 ## UI (Optional Inspection Layer)
@@ -212,7 +205,6 @@ Then:
 POST /jobs/{job_id}/run
 ```
 
----
 
 ## Reliability & Guardrails
 
@@ -225,7 +217,6 @@ POST /jobs/{job_id}/run
 - Full audit trail
 - No hidden agent memory
 
----
 
 ## Notes
 This project is designed as a reference implementation for:
@@ -235,7 +226,6 @@ This project is designed as a reference implementation for:
 
 It intentionally prioritizes clarity and control over raw model capability.
 
----
 
 ## Future Improvements
 
